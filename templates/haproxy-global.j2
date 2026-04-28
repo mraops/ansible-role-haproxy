@@ -1,0 +1,49 @@
+global
+    maxconn {{ haproxy_maxconn }}
+    log /dev/log local0
+    log /dev/log local1 notice
+    daemon
+    stats socket /var/run/haproxy.sock mode 600 level admin
+
+defaults
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    retries {{ haproxy_retries }}
+    timeout connect {{ haproxy_timeout_connect }}
+    timeout client  {{ haproxy_timeout_client }}
+    timeout server  {{ haproxy_timeout_server }}
+    timeout queue   {{ haproxy_timeout_queue }}
+    timeout tunnel {{ haproxy_timeout_tunnel }}
+
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 401 /etc/haproxy/errors/401.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 404 /etc/haproxy/errors/404.http
+    errorfile 405 /etc/haproxy/errors/405.http
+    errorfile 407 /etc/haproxy/errors/407.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 410 /etc/haproxy/errors/410.http
+    errorfile 413 /etc/haproxy/errors/413.http
+    errorfile 425 /etc/haproxy/errors/425.http
+    errorfile 429 /etc/haproxy/errors/429.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 501 /etc/haproxy/errors/501.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
+
+listen stats
+    bind *:8888
+    mode http
+    stats enable
+    stats uri /stats
+    stats realm HAProxy\ Statistics
+    stats show-node
+    stats show-legends
+{%if haproxy_stats_user is defined and haproxy_stats_user_pass is defined  %}
+    stats auth {{ haproxy_stats_user }}:{{haproxy_stats_user_pass }}
+{% endif%}
+
+

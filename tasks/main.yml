@@ -1,0 +1,36 @@
+---
+# tasks file for haproxy
+- name: Install haproxy package with yum
+  ansible.builtin.include_tasks:
+    file: common/install/yum.yaml
+  when: ansible_pkg_mgr == "yum"
+  tags:
+    - haproxy-install
+
+- name: Install haproxy package with dnf
+  ansible.builtin.include_tasks:
+    file: "common/install/dnf.yaml"
+  when: ansible_pkg_mgr == "dnf"
+  tags:
+    - haproxy-install
+
+- name: Install haproxy package with apt
+  ansible.builtin.include_tasks:
+    file: "common/install/apt.yaml"
+  when: ansible_pkg_mgr == "apt"
+  tags:
+    - haproxy-install
+
+- name: Include common config tasks
+  ansible.builtin.import_tasks:
+    file: "common/config.yaml"
+  tags:
+    - haproxy-config
+    - haproxy-install
+
+- name: Include common start tasks
+  ansible.builtin.include_tasks:
+    file: "common/start.yaml"
+  tags:
+    - haproxy-start
+    - haproxy-install

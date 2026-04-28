@@ -1,0 +1,39 @@
+- name: Add HAPROXY repository for Debian
+  block:
+    - name: Download HAPROXY GPG
+      ansible.builtin.apt_key:
+        url: https://haproxy.debian.net/bernat.debian.org.gpg
+        state: present
+    - name: Add HAPROXY repository
+      ansible.builtin.apt_repository:
+        repo: "deb http://haproxy.debian.net {{ ansible_distribution_release }}-backports-{{ haproxy_debian_version }} main"
+        state: present
+        update_cache: true
+        filename: haproxy
+  when: haproxy_add_official_haproxy_repository | default(false) | bool
+  tags:
+    - haproxy-install
+
+- name: Install haproxy package
+  ansible.builtin.apt:
+    name:
+      - haproxy
+      - socat
+    state: latest
+    update_cache: true
+    cache_valid_time: "{{ apt_update_cache_valid_time | default(3600) }}"
+  tags:
+    - haproxy-install
+# - name: Edit haproxy service on Debian11
+#   ansible.builtin.lineinfile:
+#     path: /lib/systemd/system/haproxy.service
+#     state: present
+#     regexp: '^Environment="CONFIG=/etc/haproxy/haproxy.cfg"'
+#     line: 'Environment="CONFIG=/etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d" "PIDFILE=/run/haproxy.pid" "EXTRAOPTS=-S /run/haproxy-master.sock"'
+#     backup: true
+#   notify:
+#     - Reload haproxy service
+#   tags:
+#     - haproxy-install
+# - name: Flush handlers
+#   meta: flush_handlers

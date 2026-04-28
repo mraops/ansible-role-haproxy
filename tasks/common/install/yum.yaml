@@ -1,0 +1,9 @@
+- name: Install haproxy package
+  ansible.builtin.yum:
+    name:
+      - haproxy
+      - policycoreutils-python-utils
+      - socat
+    state: latest
+  tags:
+    - haproxy-install

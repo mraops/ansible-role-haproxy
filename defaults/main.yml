@@ -1,0 +1,59 @@
+---
+# defaults file for haproxy
+haproxy_add_official_haproxy_repository: false
+haproxy_debian_version: "3.2" # Stable version of HAProxy LTS
+haproxy_oom_score_adjust: -900
+haproxy_restart_sec: 5s
+haproxy_stats_user: haproxy
+haproxy_stats_user_pass: haproxy
+haproxy_maps_dir: "/etc/haproxy/maps/"
+
+haproxy_maxconn: 4096
+haproxy_retries: 3
+haproxy_timeout_connect: 5s
+haproxy_timeout_client: 50s
+haproxy_timeout_server: 50s
+haproxy_timeout_queue: 30s
+haproxy_timeout_tunnel: 30m
+
+haproxy_frontends:
+  []
+  # - name: https_front
+  #   bind: "*:443"
+  #   ssl_enabled: true
+  #   ssl_cert: "/etc/ssl/private/haproxy.pem"
+  #   ssl_cert_src: "files/haproxy.pem"   # Path to SSL certificate on ansible host
+  #   ssl_options: "no-sslv3"
+  #   default_backend: web_backend
+  #   options:
+  #     - option forwardfor
+  #     - http-request set-header X-Forwarded-Proto https
+  # - name: http_front
+  #   bind: "*:80"
+  #   default_backend: web_backend
+  #   options:
+  #     - redirect scheme https code 301 if !{ ssl_fc }
+
+haproxy_backends:
+  []
+  # - name: web_backend
+  #   servers:
+  #     - name: web1
+  #       address: 10.0.0.101
+  #       port: 80
+  #     - name: web2
+  #       address: 10.0.0.102
+  #       port: 80
+
+haproxy_maps:
+  []
+  # - name: hosts_map
+  #   content:
+  #     www.example.com: web_backend
+  #     www.test.com: test_backend
+
+  # - name: redirects_map
+  #   file_path: "redirects.map"
+  #   content:
+  #     /oldpath: /newpath
+  #     /oldpage.html: /newpage.html

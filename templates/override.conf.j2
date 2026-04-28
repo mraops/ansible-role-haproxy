@@ -1,0 +1,5 @@
+[Service]
+Environment="CONFIG=/etc/haproxy/haproxy.cfg -f /etc/haproxy/conf.d"
+OOMScoreAdjust={{ haproxy_oom_score_adjust }}
+Restart=on-failure
+RestartSec={{ haproxy_restart_sec }}

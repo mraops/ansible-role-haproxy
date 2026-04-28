@@ -1,0 +1,7 @@
+- name: Launch haproxy service
+  ansible.builtin.service:
+    name: haproxy
+    state: started
+    enabled: true
+  tags:
+    - haproxy-start

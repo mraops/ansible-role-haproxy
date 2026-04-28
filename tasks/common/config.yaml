@@ -1,0 +1,138 @@
+- name: Copy haproxy errors.zip file
+  ansible.builtin.copy:
+    src: "errors.zip"
+    dest: "/tmp/errors.zip"
+    mode: "0644"
+  tags:
+    - haproxy-config
+    - haproxy-upload-errors
+  notify:
+    - Restart haproxy service
+
+- name: Extract error files from errors.zip
+  ansible.builtin.unarchive:
+    src: "/tmp/errors.zip"
+    dest: "/etc/haproxy"
+    remote_src: true
+    mode: "0755"
+  tags:
+    - haproxy-config
+    - haproxy-upload-errors
+
+- name: "Ensure haproxy systemd override directory exists "
+  ansible.builtin.file:
+    path: "/etc/systemd/system/haproxy.service.d"
+    state: directory
+    mode: "0755"
+  tags:
+    - haproxy-config
+
+- name: "Copy haproxy systemd override file"
+  ansible.builtin.template:
+    src: override.conf.j2
+    dest: "/etc/systemd/system/haproxy.service.d/override.conf"
+    mode: "0644"
+  tags:
+    - haproxy-config
+  notify:
+    - Reload haproxy service
+    - Restart haproxy service
+
+- name: "Copy haproxy-state script"
+  ansible.builtin.copy:
+    src: tools/haproxy-state.py
+    dest: "/usr/bin/haproxy-state"
+    mode: "0755"
+  tags:
+    - haproxy-tools
+    - haproxy-config
+
+- name: "Copy haproxy config validation helper"
+  ansible.builtin.copy:
+    src: tools/haproxy-validate-config.py
+    dest: "/usr/local/bin/haproxy-validate-config"
+    mode: "0755"
+  tags:
+    - haproxy-tools
+    - haproxy-config
+
+- name: Copy haproxy global configuration file
+  ansible.builtin.template:
+    src: haproxy-global.j2
+    dest: "/etc/haproxy/haproxy.cfg"
+    mode: "0644"
+    validate: "/usr/local/bin/haproxy-validate-config --main-config %s --conf-dir /etc/haproxy/conf.d"
+  tags:
+    - haproxy-config
+    - haproxy-global-config
+  notify:
+    - Restart haproxy service
+
+- name: Copy SSL certificates if needed
+  ansible.builtin.copy:
+    src: "{{ item.ssl_cert_src }}/"
+    dest: "{{ item.ssl_cert }}"
+    owner: root
+    group: root
+    mode: "0600"
+  when: item.ssl_enabled | default(false)
+  tags:
+    - haproxy-config
+    - haproxy-ssl
+  loop: "{{ haproxy_frontends }}"
+  loop_control:
+    label: "{{ item.name }}"
+  notify:
+    - Restart haproxy service
+
+- name: Ensure /etc/haproxy/conf.d exists
+  ansible.builtin.file:
+    path: "/etc/haproxy/conf.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  tags:
+    - haproxy-config
+    - haproxy-app
+
+- name: Create HAProxy map files
+  block:
+    - name: Create HAProxy map folder
+      ansible.builtin.file:
+        path: "{{ haproxy_maps_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+    - name: Create HAProxy map files
+      ansible.builtin.copy:
+        dest: "{{ haproxy_maps_dir }}/{{ item.name }}.map"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          {% for key, value in item.content.items() %}
+          {{ key }} {{ value }}
+          {% endfor %}
+      loop: "{{ haproxy_maps }}"
+      loop_control:
+        label: "{{ item.name }}"
+  when: haproxy_maps is defined
+  tags:
+    - haproxy-config
+    - haproxy-maps
+  notify:
+    - Restart haproxy service
+
+- name: Copy haproxy app configuration file
+  ansible.builtin.template:
+    src: "haproxy-app.conf.j2"
+    dest: "/etc/haproxy/conf.d/haproxy-app.cfg"
+    mode: "0644"
+    validate: "/usr/local/bin/haproxy-validate-config --main-config /etc/haproxy/haproxy.cfg --conf-dir /etc/haproxy/conf.d --candidate-config %s --candidate-name haproxy-app.cfg"
+  tags:
+    - haproxy-config
+    - haproxy-app
+  notify:
+    - Restart haproxy service

@@ -1,0 +1,29 @@
+{% for frontend in haproxy_frontends %}
+frontend {{ frontend.name }}
+{% if frontend.ssl_enabled | default(false) %}
+  bind {{ frontend.bind }} ssl crt {{ frontend.ssl_cert }}{% if frontend.ssl_options is defined %} {{ frontend.ssl_options }}{% endif %}
+{% else %}
+  bind {{ frontend.bind }}
+{% endif %}  
+  mode {{ frontend.mode | default('http') }}
+  default_backend {{ frontend.default_backend }}
+{% if frontend.options is defined %}
+{% for opt in frontend.options %}
+  {{ opt }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{% for backend in haproxy_backends %}
+backend {{ backend.name }}
+  mode {{ backend.mode | default('http') }}
+  balance {{ backend.balance | default('roundrobin') }}
+{% if backend.options is defined %}
+{% for opt in backend.options %}
+  {{ opt }}
+{% endfor %}
+{% endif %}
+{% for server in backend.servers %}
+  server {{ server.name }} {{ server.address }}:{{ server.port }} {{ server.options | default('check') }}
+{% endfor %}
+{% endfor %}
