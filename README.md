@@ -215,11 +215,3 @@ haproxy-state --socket /var/run/haproxy.sock
 ├── errors/                  # Кастомные страницы ошибок
 └── maps/                    # Map-файлы
 ```
-
-## Лицензия
-
-MIT
-
-## Автор
-
-Armen Akopyan
